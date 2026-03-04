@@ -52,3 +52,16 @@ sourceSets {
     // Make sure gradle (also) places resource files where IntelliJ wants them
     sourceSets.main.output.resourcesDir = sourceSets.main.java.classesDirectory
 }
+
+jar {
+	manifest {
+		attributes "Main-Class": "edu.touro.mco152.bm.App"
+	}
+
+	archiveBaseName = 'badbm'
+
+	duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+	from {
+		configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+	}
+}
