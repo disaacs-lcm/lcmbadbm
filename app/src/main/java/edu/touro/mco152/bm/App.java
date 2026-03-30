@@ -5,10 +5,8 @@ import edu.touro.mco152.bm.ui.Gui;
 import edu.touro.mco152.bm.ui.MainFrame;
 import edu.touro.mco152.bm.ui.SelectFrame;
 
-import javax.swing.SwingWorker.StateValue;
 import javax.swing.*;
 import javax.swing.UIManager.LookAndFeelInfo;
-import java.beans.PropertyChangeEvent;
 import java.io.*;
 import java.nio.file.Files;
 import java.util.Properties;
@@ -45,7 +43,8 @@ public class App {
     public static int numOfMarks = 25;      // desired number of marks
     public static int numOfBlocks = 32;     // desired number of blocks
     public static int blockSizeKb = 512;    // size of a block in KBs
-    public static DiskWorker worker = null;
+    public static BenchmarkUI benchmarkUI;
+    public static SwingDiskWorker worker = null;
     public static int nextMarkNumber = 1;   // number of the next mark
     public static double wMax = -1, wMin = -1, wAvg = -1;
     public static double rMax = -1, rMin = -1, rAvg = -1;
@@ -108,6 +107,7 @@ public class App {
         Gui.mainFrame.refreshConfig();
         Gui.mainFrame.setLocationRelativeTo(null);
         Gui.progressBar = Gui.mainFrame.getProgressBar();
+        App.benchmarkUI = new Gui();
 
         // configure the embedded DB in .jDiskMark
         System.setProperty("derby.system.home", APP_CACHE_DIR);
@@ -260,29 +260,10 @@ public class App {
 
         //3. update state
         state = State.DISK_TEST_STATE;
-        Gui.mainFrame.adjustSensitivity();
+        benchmarkUI.adjustSensitivity();
 
-        //4. set up disk worker thread and its event handlers
-        worker = new DiskWorker();
-        worker.addPropertyChangeListener((final PropertyChangeEvent event) -> {
-            switch (event.getPropertyName()) {
-                case "progress":
-                    int value = (Integer) event.getNewValue();
-                    Gui.progressBar.setValue(value);
-                    long kbProcessed = (value) * App.targetTxSizeKb() / 100;
-                    Gui.progressBar.setString(kbProcessed + " / " + App.targetTxSizeKb());
-                    break;
-                case "state":
-                    switch ((StateValue) event.getNewValue()) {
-                        case STARTED:
-                            Gui.progressBar.setString("0 / " + App.targetTxSizeKb());
-                            break;
-                        case DONE:
-                            break;
-                    } // end inner switch
-                    break;
-            }
-        });
+        //4. set up disk worker thread
+        worker = new SwingDiskWorker(benchmarkUI);
 
         //5. start the Swing worker thread
         worker.execute();

@@ -1,7 +1,9 @@
 package edu.touro.mco152.bm.ui;
 
 import edu.touro.mco152.bm.App;
+import edu.touro.mco152.bm.BenchmarkUI;
 import edu.touro.mco152.bm.DiskMark;
+import edu.touro.mco152.bm.persist.DiskRun;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
@@ -15,12 +17,13 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.Serial;
 import java.text.NumberFormat;
+import javax.swing.JOptionPane;
 
 /**
  * Creates and populates a graph with data from the current run, and
  * stores gui references for easy access.
  */
-public final class Gui {
+public final class Gui implements BenchmarkUI {
 
     public static ChartPanel chartPanel = null;
     public static MainFrame mainFrame = null;
@@ -89,33 +92,34 @@ public final class Gui {
         plot.getRenderer().setSeriesPaint(5, Color.ORANGE);
         plot.getRenderer().setSeriesPaint(6, Color.GREEN);
         plot.getRenderer().setSeriesPaint(7, Color.RED);
-        updateLegend();
+        // init legend visibility
+        chart.getXYPlot().getRenderer().setSeriesVisibleInLegend(0, App.writeTest);
+        chart.getXYPlot().getRenderer().setSeriesVisibleInLegend(1, App.writeTest);
+        chart.getXYPlot().getRenderer().setSeriesVisibleInLegend(2, App.writeTest && App.showMaxMin);
+        chart.getXYPlot().getRenderer().setSeriesVisibleInLegend(3, App.writeTest && App.showMaxMin);
+        chart.getXYPlot().getRenderer().setSeriesVisibleInLegend(4, App.readTest);
+        chart.getXYPlot().getRenderer().setSeriesVisibleInLegend(5, App.readTest);
+        chart.getXYPlot().getRenderer().setSeriesVisibleInLegend(6, App.readTest && App.showMaxMin);
+        chart.getXYPlot().getRenderer().setSeriesVisibleInLegend(7, App.readTest && App.showMaxMin);
         return chartPanel;
     }
 
-    public static void addWriteMark(DiskMark mark) {
-        wSeries.add(mark.getMarkNum(), mark.getBwMbSec());
-        wAvgSeries.add(mark.getMarkNum(), mark.getCumAvg());
-        if (App.showMaxMin) {
-            wMaxSeries.add(mark.getMarkNum(), mark.getCumMax());
-            wMinSeries.add(mark.getMarkNum(), mark.getCumMin());
-        }
-        Gui.mainFrame.refreshWriteMetrics();
-        System.out.println(mark.toString());
+    // BenchmarkUI instance methods
+
+    @Override
+    public void updateLegend() {
+        chart.getXYPlot().getRenderer().setSeriesVisibleInLegend(0, App.writeTest);
+        chart.getXYPlot().getRenderer().setSeriesVisibleInLegend(1, App.writeTest);
+        chart.getXYPlot().getRenderer().setSeriesVisibleInLegend(2, App.writeTest && App.showMaxMin);
+        chart.getXYPlot().getRenderer().setSeriesVisibleInLegend(3, App.writeTest && App.showMaxMin);
+        chart.getXYPlot().getRenderer().setSeriesVisibleInLegend(4, App.readTest);
+        chart.getXYPlot().getRenderer().setSeriesVisibleInLegend(5, App.readTest);
+        chart.getXYPlot().getRenderer().setSeriesVisibleInLegend(6, App.readTest && App.showMaxMin);
+        chart.getXYPlot().getRenderer().setSeriesVisibleInLegend(7, App.readTest && App.showMaxMin);
     }
 
-    public static void addReadMark(DiskMark mark) {
-        rSeries.add(mark.getMarkNum(), mark.getBwMbSec());
-        rAvgSeries.add(mark.getMarkNum(), mark.getCumAvg());
-        if (App.showMaxMin) {
-            rMaxSeries.add(mark.getMarkNum(), mark.getCumMax());
-            rMinSeries.add(mark.getMarkNum(), mark.getCumMin());
-        }
-        Gui.mainFrame.refreshReadMetrics();
-        System.out.println(mark.toString());
-    }
-
-    public static void resetTestData() {
+    @Override
+    public void resetTestData() {
         wSeries.clear();
         rSeries.clear();
         wAvgSeries.clear();
@@ -125,19 +129,57 @@ public final class Gui {
         wMinSeries.clear();
         rMinSeries.clear();
         progressBar.setValue(0);
-        Gui.mainFrame.refreshReadMetrics();
-        Gui.mainFrame.refreshWriteMetrics();
+        mainFrame.refreshReadMetrics();
+        mainFrame.refreshWriteMetrics();
     }
 
-    public static void updateLegend() {
-        chart.getXYPlot().getRenderer().setSeriesVisibleInLegend(0, App.writeTest);
-        chart.getXYPlot().getRenderer().setSeriesVisibleInLegend(1, App.writeTest);
-        chart.getXYPlot().getRenderer().setSeriesVisibleInLegend(2, App.writeTest && App.showMaxMin);
-        chart.getXYPlot().getRenderer().setSeriesVisibleInLegend(3, App.writeTest && App.showMaxMin);
-
-        chart.getXYPlot().getRenderer().setSeriesVisibleInLegend(4, App.readTest);
-        chart.getXYPlot().getRenderer().setSeriesVisibleInLegend(5, App.readTest);
-        chart.getXYPlot().getRenderer().setSeriesVisibleInLegend(6, App.readTest && App.showMaxMin);
-        chart.getXYPlot().getRenderer().setSeriesVisibleInLegend(7, App.readTest && App.showMaxMin);
+    @Override
+    public void setChartTitle(String title) {
+        chartPanel.getChart().getTitle().setVisible(true);
+        chartPanel.getChart().getTitle().setText(title);
     }
+
+    @Override
+    public void addRun(DiskRun run) { runPanel.addRun(run); }
+
+    @Override
+    public void addWriteMark(DiskMark dm) {
+        wSeries.add(dm.getMarkNum(), dm.getBwMbSec());
+        wAvgSeries.add(dm.getMarkNum(), dm.getCumAvg());
+        if (App.showMaxMin) {
+            wMaxSeries.add(dm.getMarkNum(), dm.getCumMax());
+            wMinSeries.add(dm.getMarkNum(), dm.getCumMin());
+        }
+        mainFrame.refreshWriteMetrics();
+        System.out.println(dm.toString());
+    }
+
+    @Override
+    public void addReadMark(DiskMark dm) {
+        rSeries.add(dm.getMarkNum(), dm.getBwMbSec());
+        rAvgSeries.add(dm.getMarkNum(), dm.getCumAvg());
+        if (App.showMaxMin) {
+            rMaxSeries.add(dm.getMarkNum(), dm.getCumMax());
+            rMinSeries.add(dm.getMarkNum(), dm.getCumMin());
+        }
+        mainFrame.refreshReadMetrics();
+        System.out.println(dm.toString());
+    }
+
+    @Override
+    public void adjustSensitivity() { mainFrame.adjustSensitivity(); }
+
+    @Override
+    public void showMessage(String message, String title) {
+        JOptionPane.showMessageDialog(mainFrame, message, title, JOptionPane.PLAIN_MESSAGE);
+    }
+
+    @Override
+    public void updateProgress(int value, String progressStr) {
+        progressBar.setValue(value);
+        progressBar.setString(progressStr);
+    }
+
+    @Override
+    public void msg(String message) { mainFrame.msg(message); }
 }
