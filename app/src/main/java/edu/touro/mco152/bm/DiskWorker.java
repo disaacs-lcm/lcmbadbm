@@ -2,7 +2,6 @@ package edu.touro.mco152.bm;
 
 import edu.touro.mco152.bm.persist.DiskRun;
 import edu.touro.mco152.bm.persist.EM;
-import edu.touro.mco152.bm.ui.Gui;
 
 import jakarta.persistence.EntityManager;
 import javax.swing.*;
@@ -24,7 +23,7 @@ import static edu.touro.mco152.bm.DiskMark.MarkType.WRITE;
  * once.) Cooperates with Swing to provide and make use of interim and final progress and
  * information, which is also recorded as needed to the persistence store, and log.
  * <p>
- * Depends on static values that describe the benchmark to be done having been set in App and Gui classes.
+ * Depends on static values that describe the benchmark to be done having been set in App and ui classes.
  * The DiskRun class is used to keep track of and persist info about each benchmark at a higher level (a run),
  * while the DiskMark class described each iteration's result, which is displayed by the UI as the benchmark run
  * progresses.
@@ -41,6 +40,12 @@ public class DiskWorker extends SwingWorker<Boolean, DiskMark> {
 
     // Record any success or failure status returned from SwingWorker (might be us or super)
     Boolean lastStatus = null;  // so far unknown
+
+    private DiskUI ui = null;
+
+    public DiskWorker (DiskUI ui) {
+	    this.ui = ui;
+    }
 
     @Override
     protected Boolean doInBackground() throws Exception {
@@ -76,17 +81,17 @@ public class DiskWorker extends SwingWorker<Boolean, DiskMark> {
 
         DiskMark wMark, rMark;  // declare vars that will point to objects used to pass progress to UI
 
-        Gui.updateLegend();  // init chart legend info
+        ui.updateLegend();  // init chart legend info
 
         if (App.autoReset) {
             App.resetTestData();
-            Gui.resetTestData();
+            ui.resetTestData();
         }
 
         int startFileNum = App.nextMarkNumber;
 
         /*
-          The GUI allows a Write, Read, or both types of BMs to be started. They are done serially.
+          The UI allows a Write, Read, or both types of BMs to be started. They are done serially.
          */
         if (App.writeTest) {
             DiskRun run = new DiskRun(DiskRun.IOMode.WRITE, App.blockSequence);
@@ -96,11 +101,10 @@ public class DiskWorker extends SwingWorker<Boolean, DiskMark> {
             run.setTxSize(App.targetTxSizeKb());
             run.setDiskInfo(Util.getDiskInfo(dataDir));
 
-            // Tell logger and GUI to display what we know so far about the Run
+            // Tell logger and UI to display what we know so far about the Run
             msg("disk info: (" + run.getDiskInfo() + ")");
 
-            Gui.chartPanel.getChart().getTitle().setVisible(true);
-            Gui.chartPanel.getChart().getTitle().setText(run.getDiskInfo());
+	    ui.initLegend(run.getDiskInfo());
 
             // Create a test data file using the default file system and config-specified location
             if (!App.multiFile) {
@@ -110,7 +114,7 @@ public class DiskWorker extends SwingWorker<Boolean, DiskMark> {
             /*
               Begin an outer loop for specified duration (number of 'marks') of benchmark,
               that keeps writing data (in its own loop - for specified # of blocks). Each 'Mark' is timed
-              and is reported to the GUI for display as each Mark completes.
+              and is reported to the UI for display as each Mark completes.
              */
             for (int m = startFileNum; m < startFileNum + App.numOfMarks && !isCancelled(); m++) {
 
@@ -144,7 +148,7 @@ public class DiskWorker extends SwingWorker<Boolean, DiskMark> {
                             percentComplete = (float) unitsComplete / (float) unitsTotal * 100f;
 
                             /*
-                              Report to GUI what percentage level of Entire BM (#Marks * #Blocks) is done.
+                              Report to UI what percentage level of Entire BM (#Marks * #Blocks) is done.
                              */
                             setProgress((int) percentComplete);
                         }
@@ -186,7 +190,7 @@ public class DiskWorker extends SwingWorker<Boolean, DiskMark> {
             em.persist(run);
             em.getTransaction().commit();
 
-            Gui.runPanel.addRun(run);
+            ui.addRun(run);
         }
 
         /*
@@ -197,14 +201,13 @@ public class DiskWorker extends SwingWorker<Boolean, DiskMark> {
 
         // try renaming all files to clear catch
         if (App.readTest && App.writeTest && !isCancelled()) {
-            JOptionPane.showMessageDialog(Gui.mainFrame,
-                    """
+		ui.sendPlainMessage("""
                             For valid READ measurements please clear the disk cache by
                             using the included RAMMap.exe or flushmem.exe utilities.
                             Removable drives can be disconnected and reconnected.
                             For system drives use the WRITE and READ operations\s
                             independantly by doing a cold reboot after the WRITE""",
-                    "Clear Disk Cache Now", JOptionPane.PLAIN_MESSAGE);
+                    "Clear Disk Cache Now");
         }
 
         // Same as above, just for Read operations instead of Writes.
@@ -218,8 +221,7 @@ public class DiskWorker extends SwingWorker<Boolean, DiskMark> {
 
             msg("disk info: (" + run.getDiskInfo() + ")");
 
-            Gui.chartPanel.getChart().getTitle().setVisible(true);
-            Gui.chartPanel.getChart().getTitle().setText(run.getDiskInfo());
+	    ui.initLegend(run.getDiskInfo());
 
             for (int m = startFileNum; m < startFileNum + App.numOfMarks && !isCancelled(); m++) {
 
@@ -253,7 +255,6 @@ public class DiskWorker extends SwingWorker<Boolean, DiskMark> {
                     Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
                     String emsg = "May not have done Write Benchmarks, so no data available to read." +
                             ex.getMessage();
-                    JOptionPane.showMessageDialog(Gui.mainFrame, emsg, "Unable to READ", JOptionPane.ERROR_MESSAGE);
                     msg(emsg);
                     return false;
                 }
@@ -281,7 +282,7 @@ public class DiskWorker extends SwingWorker<Boolean, DiskMark> {
             em.persist(run);
             em.getTransaction().commit();
 
-            Gui.runPanel.addRun(run);
+            ui.addRun(run);
         }
         App.nextMarkNumber += App.numOfMarks;
         return true;
@@ -297,9 +298,9 @@ public class DiskWorker extends SwingWorker<Boolean, DiskMark> {
     protected void process(List<DiskMark> markList) {
         markList.stream().forEach((dm) -> {
             if (dm.type == DiskMark.MarkType.WRITE) {
-                Gui.addWriteMark(dm);
+                ui.addWriteMark(dm);
             } else {
-                Gui.addReadMark(dm);
+                ui.addReadMark(dm);
             }
         });
     }
@@ -318,7 +319,7 @@ public class DiskWorker extends SwingWorker<Boolean, DiskMark> {
             Util.deleteDirectory(dataDir);
         }
         App.state = App.State.IDLE_STATE;
-        Gui.mainFrame.adjustSensitivity();
+        ui.adjustSensitivity();
     }
 
     public Boolean getLastStatus() {

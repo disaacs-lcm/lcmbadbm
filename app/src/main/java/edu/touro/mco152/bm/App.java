@@ -32,6 +32,7 @@ public class App {
     public static File locationDir = null;
     public static File dataDir = null;
     public static File testFile = null;
+    public static GuiWrapper guiWrapperInstance = new GuiWrapper();
     // options
     public static boolean multiFile = true;
     public static boolean autoRemoveData = false;
@@ -263,7 +264,7 @@ public class App {
         Gui.mainFrame.adjustSensitivity();
 
         //4. set up disk worker thread and its event handlers
-        worker = new DiskWorker();
+        worker = new DiskWorker(guiWrapperInstance);
         worker.addPropertyChangeListener((final PropertyChangeEvent event) -> {
             switch (event.getPropertyName()) {
                 case "progress":
