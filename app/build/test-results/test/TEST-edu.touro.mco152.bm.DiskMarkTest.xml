@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="edu.touro.mco152.bm.DiskMarkTest" tests="11" skipped="0" failures="1" errors="0" timestamp="2026-05-19T02:27:16.072Z" hostname="Davids-MacBook-Air.local" time="0.127">
+  <properties/>
+  <testcase name="cumAvg_NegativeValueIsStoredAsGiven()" classname="edu.touro.mco152.bm.DiskMarkTest" time="0.009"/>
+  <testcase name="[1] 0" classname="edu.touro.mco152.bm.DiskMarkTest" time="0.004"/>
+  <testcase name="[2] 1" classname="edu.touro.mco152.bm.DiskMarkTest" time="0.0"/>
+  <testcase name="[3] 25" classname="edu.touro.mco152.bm.DiskMarkTest" time="0.001"/>
+  <testcase name="[4] 2147483647" classname="edu.touro.mco152.bm.DiskMarkTest" time="0.0"/>
+  <testcase name="bwMbSecAsString_ConformsToNumericFormat()" classname="edu.touro.mco152.bm.DiskMarkTest" time="0.003"/>
+  <testcase name="bwMbSec_ReturnsCorrectValue()" classname="edu.touro.mco152.bm.DiskMarkTest" time="0.001"/>
+  <testcase name="bwMbSecAsString_CrossCheckWithDecimalFormat()" classname="edu.touro.mco152.bm.DiskMarkTest" time="0.005">
+    <failure message="org.opentest4j.AssertionFailedError: getBwMbSecAsString() should match what DecimalFormat(&quot;###.###&quot;) produces ==&gt; expected: &lt;1234.568&gt; but was: &lt;2234.568&gt;" type="org.opentest4j.AssertionFailedError">org.opentest4j.AssertionFailedError: getBwMbSecAsString() should match what DecimalFormat(&quot;###.###&quot;) produces ==&gt; expected: &lt;1234.568&gt; but was: &lt;2234.568&gt;
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:182)
+	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:1156)
+	at edu.touro.mco152.bm.DiskMarkTest.bwMbSecAsString_CrossCheckWithDecimalFormat(DiskMarkTest.java:87)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+</failure>
+  </testcase>
+  <testcase name="bwMbSecAsString_NeverNull()" classname="edu.touro.mco152.bm.DiskMarkTest" time="0.0"/>
+  <testcase name="bwMbSec_ZeroIsValidLowerBoundary()" classname="edu.touro.mco152.bm.DiskMarkTest" time="0.001"/>
+  <testcase name="getBwMbSecAsString_CompletesWithinTimeLimit()" classname="edu.touro.mco152.bm.DiskMarkTest" time="0.082"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

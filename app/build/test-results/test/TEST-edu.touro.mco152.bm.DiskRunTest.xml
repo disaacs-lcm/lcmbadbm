@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="edu.touro.mco152.bm.DiskRunTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-05-19T02:27:16.201Z" hostname="Davids-MacBook-Air.local" time="0.006">
+  <properties/>
+  <testcase name="getMax_ReturnsDashForNegativeOne()" classname="edu.touro.mco152.bm.DiskRunTest" time="0.001"/>
+  <testcase name="getDuration_ReturnsUnknownWhenEndTimeIsNull()" classname="edu.touro.mco152.bm.DiskRunTest" time="0.0"/>
+  <testcase name="getMin_ReturnsFormattedValueWhenPositive()" classname="edu.touro.mco152.bm.DiskRunTest" time="0.001"/>
+  <testcase name="toString_ContainsIoModeAndBlockOrder()" classname="edu.touro.mco152.bm.DiskRunTest" time="0.004"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
