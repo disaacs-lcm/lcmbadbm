@@ -10,7 +10,7 @@ IntelliJ Items
 # build artifacts
 .gradle/
 bin/
-build/
+# build/ is NOT ignored so test-results are committed for grading
 out/
 
 # program execution artifacts
