@@ -23,15 +23,8 @@ public class DiskMark {
         return "Mark(" + type + "): " + getMarkNum() + " bwMbSec: " + getBwMbSecAsString() + " avg: " + getAvgAsString();
     }
 
-    /**
-     * INDUCED ERROR for JunitFirstPass assignment submission:
-     * An offset of +1000 has been added to getBwMbSec() to intentionally break the
-     * cross-check test {@code bwMbSecAsString_CrossCheckWithDecimalFormat} in
-     * DiskMarkTest.  All other tests remain green.  The real implementation
-     * should be {@code return df.format(getBwMbSec());}.
-     */
     String getBwMbSecAsString() {
-        return df.format(getBwMbSec() + 1000);   // INDUCED ERROR: +1000 offset breaks cross-check test
+        return df.format(getBwMbSec());
     }
 
     String getMinAsString() {
