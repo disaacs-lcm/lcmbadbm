@@ -3,47 +3,39 @@ package edu.touro.mco152.bm;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.RandomAccessFile;
-import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.touro.mco152.bm.persist.DiskRun;
-import edu.touro.mco152.bm.persist.EM;
-import jakarta.persistence.EntityManager;
 
-public class ReadBenchmarker {
+/**
+ * Runs the read portion of the disk benchmark.
+ * Reads blocks from an existing test file and measures throughput for each mark.
+ */
+public class ReadBenchmarker extends AbstractBenchmarker {
 
+	/**
+	 * Executes the read benchmark across all configured marks and blocks.
+	 * Reads data from the test file, tracks throughput per mark, and reports progress to the UI.
+	 *
+	 * @param caller provides cancellation checks and progress reporting
+	 * @param ui     the UI to update as the benchmark runs
+	 * @return {@code true} if the benchmark completed successfully, {@code false} if the test file was not found
+	 * @throws Exception if an unexpected IO error occurs
+	 */
 	public Boolean runBenchmark(DiskBenchmarkCaller caller, DiskUI ui) throws Exception {
-		/*
-		 * init local vars that keep track of benchmarks, and a large read/write buffer
-		 */
+		int[] unitTotals = computeUnitTotals();
+		int wUnitsTotal = unitTotals[0], rUnitsTotal = unitTotals[1], unitsTotal = unitTotals[2];
 		int wUnitsComplete = 0, rUnitsComplete = 0, unitsComplete;
-		int wUnitsTotal = App.writeTest ? App.numOfBlocks * App.numOfMarks : 0;
-		int rUnitsTotal = App.readTest ? App.numOfBlocks * App.numOfMarks : 0;
-		int unitsTotal = wUnitsTotal + rUnitsTotal;
 		float percentComplete;
 
 		int blockSize = App.blockSizeKb * App.KILOBYTE;
-		byte[] blockArr = new byte[blockSize];
-		for (int b = 0; b < blockArr.length; b++) {
-			if (b % 2 == 0) {
-				blockArr[b] = (byte) 0xFF;
-			}
-		}
+		byte[] blockArr = initBlockBuffer();
 
-		DiskMark rMark; // declare vars that will point to objects used to pass progress to UI
+		DiskMark rMark;
 
 		int startFileNum = App.nextMarkNumber;
-		DiskRun run = new DiskRun(DiskRun.IOMode.READ, App.blockSequence);
-		run.setNumMarks(App.numOfMarks);
-		run.setNumBlocks(App.numOfBlocks);
-		run.setBlockSize(App.blockSizeKb);
-		run.setTxSize(App.targetTxSizeKb());
-		run.setDiskInfo(Util.getDiskInfo(App.dataDir));
-
-		App.msg("disk info: (" + run.getDiskInfo() + ")");
-
-		ui.initLegend(run.getDiskInfo());
+		DiskRun run = initRun(DiskRun.IOMode.READ, ui);
 
 		for (int m = startFileNum; m < startFileNum + App.numOfMarks && !caller.isCancelled(); m++) {
 
@@ -51,7 +43,7 @@ public class ReadBenchmarker {
 				App.testFile = new File(App.dataDir.getAbsolutePath()
 						+ File.separator + "testdata" + m + ".jdm");
 			}
-			rMark = new DiskMark(DiskMark.MarkType.READ); // starting to keep track of a new benchmark
+			rMark = new DiskMark(DiskMark.MarkType.READ);
 			rMark.setMarkNum(m);
 			long startTime = System.nanoTime();
 			long totalBytesReadInMark = 0;
@@ -90,23 +82,10 @@ public class ReadBenchmarker {
 			App.updateMetrics(rMark);
 			caller.publishChunks(rMark);
 
-			run.setRunMax(rMark.getCumMax());
-			run.setRunMin(rMark.getCumMin());
-			run.setRunAvg(rMark.getCumAvg());
-			run.setEndTime(new Date());
+			updateRunStats(run, rMark);
 		}
 
-		/*
-		 * Persist info about the Read BM Run (e.g. into Derby Database) and add it to a
-		 * GUI panel
-		 */
-		EntityManager em = EM.getEntityManager();
-		em.getTransaction().begin();
-		em.persist(run);
-		em.getTransaction().commit();
-
-		ui.addRun(run);
-
+		persistRun(run, ui);
 		return true;
 	}
 }
