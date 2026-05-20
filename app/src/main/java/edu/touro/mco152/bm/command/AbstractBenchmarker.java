@@ -1,8 +1,10 @@
-package edu.touro.mco152.bm;
+package edu.touro.mco152.bm.command;
 
 import java.util.Date;
 
+import edu.touro.mco152.bm.*;
 import edu.touro.mco152.bm.persist.DiskRun;
+import edu.touro.mco152.bm.persist.DiskRun.BlockSequence;
 import edu.touro.mco152.bm.persist.EM;
 import jakarta.persistence.EntityManager;
 
@@ -12,6 +14,11 @@ import jakarta.persistence.EntityManager;
  */
 public abstract class AbstractBenchmarker {
 
+	protected DiskUI ui;
+	protected DiskBenchmarkCaller caller;
+	protected int numOfMarks, numOfBlocks, blockSizeKb;
+	protected BlockSequence blockSequence;
+
 	/**
 	 * Allocates and fills a block buffer with alternating 0xFF/0x00 bytes.
 	 * The size is determined by the current block size setting in {@link App}.
@@ -19,7 +26,7 @@ public abstract class AbstractBenchmarker {
 	 * @return the initialized byte array to use as read/write data
 	 */
 	protected byte[] initBlockBuffer() {
-		int blockSize = App.blockSizeKb * App.KILOBYTE;
+		int blockSize = blockSizeKb * App.KILOBYTE;
 		byte[] blockArr = new byte[blockSize];
 		for (int b = 0; b < blockArr.length; b++) {
 			if (b % 2 == 0) {
@@ -30,30 +37,17 @@ public abstract class AbstractBenchmarker {
 	}
 
 	/**
-	 * Computes the total number of benchmark units for write, read, and combined.
-	 * A "unit" is one block in one mark. Used to calculate overall progress percentage.
-	 *
-	 * @return int array of [wUnitsTotal, rUnitsTotal, unitsTotal]
-	 */
-	protected int[] computeUnitTotals() {
-		int wUnitsTotal = App.writeTest ? App.numOfBlocks * App.numOfMarks : 0;
-		int rUnitsTotal = App.readTest ? App.numOfBlocks * App.numOfMarks : 0;
-		return new int[]{wUnitsTotal, rUnitsTotal, wUnitsTotal + rUnitsTotal};
-	}
-
-	/**
 	 * Creates and configures a {@link DiskRun} for the given IO mode.
 	 * Populates run metadata from {@link App} settings, logs disk info, and initializes the UI legend.
 	 *
 	 * @param mode the IO direction (READ or WRITE)
-	 * @param ui   the UI to update with disk info
 	 * @return the configured DiskRun ready to collect benchmark results
 	 */
-	protected DiskRun initRun(DiskRun.IOMode mode, DiskUI ui) {
-		DiskRun run = new DiskRun(mode, App.blockSequence);
-		run.setNumMarks(App.numOfMarks);
-		run.setNumBlocks(App.numOfBlocks);
-		run.setBlockSize(App.blockSizeKb);
+	protected DiskRun initRun(DiskRun.IOMode mode) {
+		DiskRun run = new DiskRun(mode, blockSequence);
+		run.setNumMarks(numOfMarks);
+		run.setNumBlocks(numOfBlocks);
+		run.setBlockSize(blockSizeKb);
 		run.setTxSize(App.targetTxSizeKb());
 		run.setDiskInfo(Util.getDiskInfo(App.dataDir));
 		App.msg("disk info: (" + run.getDiskInfo() + ")");
@@ -81,7 +75,7 @@ public abstract class AbstractBenchmarker {
 	 * @param run the completed benchmark run to save
 	 * @param ui  the UI panel to add the run to
 	 */
-	protected void persistRun(DiskRun run, DiskUI ui) {
+	protected void persistRun(DiskRun run) {
 		EntityManager em = EM.getEntityManager();
 		em.getTransaction().begin();
 		em.persist(run);

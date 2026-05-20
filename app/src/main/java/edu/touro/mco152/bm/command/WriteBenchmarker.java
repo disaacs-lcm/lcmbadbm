@@ -1,4 +1,4 @@
-package edu.touro.mco152.bm;
+package edu.touro.mco152.bm.command;
 
 import java.io.File;
 import java.io.IOException;
@@ -6,40 +6,51 @@ import java.io.RandomAccessFile;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.touro.mco152.bm.*;
 import edu.touro.mco152.bm.persist.DiskRun;
+import edu.touro.mco152.bm.persist.DiskRun.BlockSequence;
 
 /**
  * Runs the write portion of the disk benchmark.
  * Writes blocks to a test file and measures throughput for each mark.
  */
-public class WriteBenchmarker extends AbstractBenchmarker {
+public class WriteBenchmarker extends AbstractBenchmarker implements BenchmarkCommand {
+
+	public WriteBenchmarker(DiskUI ui, DiskBenchmarkCaller caller, int numOfMarks, int numOfBlocks, int blockSizeKb,
+			BlockSequence blockSequence) {
+		this.ui = ui;
+		this.caller = caller;
+		this.numOfMarks = numOfMarks;
+		this.numOfBlocks = numOfBlocks;
+		this.blockSizeKb = blockSizeKb;
+		this.blockSequence = blockSequence;
+	}
+
 
 	/**
 	 * Executes the write benchmark across all configured marks and blocks.
 	 * Writes data to the test file, tracks throughput per mark, and reports progress to the UI.
-	 *
-	 * @param caller provides cancellation checks and progress reporting
-	 * @param ui     the UI to update as the benchmark runs
 	 */
-	public void run(DiskBenchmarkCaller caller, DiskUI ui) {
-		int[] unitTotals = computeUnitTotals();
-		int wUnitsTotal = unitTotals[0], rUnitsTotal = unitTotals[1], unitsTotal = unitTotals[2];
+	public void run() {
+		int wUnitsTotal = numOfBlocks * numOfMarks;
+		int rUnitsTotal = 0;
+		int unitsTotal = wUnitsTotal + rUnitsTotal;
 		int wUnitsComplete = 0, rUnitsComplete = 0, unitsComplete;
 		float percentComplete;
 
-		int blockSize = App.blockSizeKb * App.KILOBYTE;
+		int blockSize = blockSizeKb * App.KILOBYTE;
 		byte[] blockArr = initBlockBuffer();
 
 		DiskMark wMark;
 
 		int startFileNum = App.nextMarkNumber;
-		DiskRun run = initRun(DiskRun.IOMode.WRITE, ui);
+		DiskRun run = initRun(DiskRun.IOMode.WRITE);
 
 		if (!App.multiFile) {
 			App.testFile = new File(App.dataDir.getAbsolutePath() + File.separator + "testdata.jdm");
 		}
 
-		for (int m = startFileNum; m < startFileNum + App.numOfMarks && !caller.isCancelled(); m++) {
+		for (int m = startFileNum; m < startFileNum + numOfMarks && !caller.isCancelled(); m++) {
 
 			if (App.multiFile) {
 				App.testFile = new File(App.dataDir.getAbsolutePath()
@@ -54,9 +65,9 @@ public class WriteBenchmarker extends AbstractBenchmarker {
 
 			try {
 				try (RandomAccessFile rAccFile = new RandomAccessFile(App.testFile, mode)) {
-					for (int b = 0; b < App.numOfBlocks; b++) {
-						if (App.blockSequence == DiskRun.BlockSequence.RANDOM) {
-							int rLoc = Util.randInt(0, App.numOfBlocks - 1);
+					for (int b = 0; b < numOfBlocks; b++) {
+						if (blockSequence == DiskRun.BlockSequence.RANDOM) {
+							int rLoc = Util.randInt(0, numOfBlocks - 1);
 							rAccFile.seek((long) rLoc * blockSize);
 						} else {
 							rAccFile.seek((long) b * blockSize);
@@ -87,6 +98,6 @@ public class WriteBenchmarker extends AbstractBenchmarker {
 			updateRunStats(run, wMark);
 		}
 
-		persistRun(run, ui);
+		persistRun(run);
 	}
 }

@@ -1,20 +1,10 @@
 package edu.touro.mco152.bm;
 
-import edu.touro.mco152.bm.persist.DiskRun;
-import edu.touro.mco152.bm.persist.EM;
-
-import jakarta.persistence.EntityManager;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.RandomAccessFile;
-import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.touro.mco152.bm.command.*;
 import static edu.touro.mco152.bm.App.*;
-import static edu.touro.mco152.bm.DiskMark.MarkType.READ;
-import static edu.touro.mco152.bm.DiskMark.MarkType.WRITE;
 
 /**
  * Execute disk benchmarking as a Swing-compliant thread (only one of these threads can run at
@@ -70,7 +60,7 @@ public class DiskBenchmarker {
           The UI allows a Write, Read, or both types of BMs to be started. They are done serially.
          */
         if (App.writeTest) {
-            new WriteBenchmarker().run(caller, ui);
+            new WriteBenchmarker(ui, caller, App.numOfMarks, App.numOfBlocks, App.blockSizeKb, App.blockSequence).run();
         }
 
         /*
@@ -92,8 +82,7 @@ public class DiskBenchmarker {
 
         // Same as above, just for Read operations instead of Writes.
         if (App.readTest) {
-            if (!(new ReadBenchmarker().runBenchmark(caller, ui)))
-		    return false;
+            new ReadBenchmarker(ui, caller, App.numOfMarks, App.numOfBlocks, App.blockSizeKb, App.blockSequence).run();
         }
         App.nextMarkNumber += App.numOfMarks;
         return true;
