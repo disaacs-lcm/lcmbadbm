@@ -5,8 +5,6 @@ import java.util.Date;
 import edu.touro.mco152.bm.*;
 import edu.touro.mco152.bm.persist.DiskRun;
 import edu.touro.mco152.bm.persist.DiskRun.BlockSequence;
-import edu.touro.mco152.bm.persist.EM;
-import jakarta.persistence.EntityManager;
 
 /**
  * Base class for disk benchmark operations.
@@ -67,19 +65,5 @@ public abstract class AbstractBenchmarker {
 		run.setRunMin(mark.getCumMin());
 		run.setRunAvg(mark.getCumAvg());
 		run.setEndTime(new Date());
-	}
-
-	/**
-	 * Persists the completed run to the database and sends it to the UI for display.
-	 *
-	 * @param run the completed benchmark run to save
-	 * @param ui  the UI panel to add the run to
-	 */
-	protected void persistRun(DiskRun run) {
-		EntityManager em = EM.getEntityManager();
-		em.getTransaction().begin();
-		em.persist(run);
-		em.getTransaction().commit();
-		ui.addRun(run);
 	}
 }
