@@ -3,7 +3,7 @@ package edu.touro.mco152.bm.command;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -29,9 +29,9 @@ public class WriteBenchmarker extends AbstractBenchmarker implements BenchmarkCo
 	}
 
 
-	private static List<BenchmarkObserver> observers = new LinkedList<>();
+	private List<BenchmarkObserver> observers = new ArrayList<>();
 
-	public static void registerObserver(BenchmarkObserver o) {
+	public void registerObserver(BenchmarkObserver o) {
 		observers.add(o);
 	}
 
