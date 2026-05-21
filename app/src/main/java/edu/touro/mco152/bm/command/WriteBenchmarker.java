@@ -3,6 +3,8 @@ package edu.touro.mco152.bm.command;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -26,6 +28,12 @@ public class WriteBenchmarker extends AbstractBenchmarker implements BenchmarkCo
 		this.blockSequence = blockSequence;
 	}
 
+
+	private static List<BenchmarkObserver> observers = new LinkedList<>();
+
+	public static void registerObserver(BenchmarkObserver o) {
+		observers.add(o);
+	}
 
 	/**
 	 * Executes the write benchmark across all configured marks and blocks.
@@ -98,6 +106,8 @@ public class WriteBenchmarker extends AbstractBenchmarker implements BenchmarkCo
 			updateRunStats(run, wMark);
 		}
 
-		persistRun(run);
+		for (BenchmarkObserver o : observers) {
+			o.update(run);
+		}
 	}
 }
