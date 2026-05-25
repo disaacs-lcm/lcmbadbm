@@ -98,6 +98,8 @@ public class WriteBenchmarker extends AbstractBenchmarker implements BenchmarkCo
 			updateRunStats(run, wMark);
 		}
 
-		persistRun(run);
+		for (BenchmarkObserver o : observers) {
+			o.update(run);
+		}
 	}
 }

@@ -95,6 +95,8 @@ public class ReadBenchmarker extends AbstractBenchmarker implements BenchmarkCom
 			updateRunStats(run, rMark);
 		}
 
-		persistRun(run);
+		for (BenchmarkObserver o : observers) {
+			o.update(run);
+		}
 	}
 }

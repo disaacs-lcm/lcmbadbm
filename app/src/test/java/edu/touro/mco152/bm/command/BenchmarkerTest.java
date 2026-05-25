@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.io.File;
 import java.util.Properties;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -59,6 +60,7 @@ public class BenchmarkerTest {
 	@Test
 	public void writeBenchmark() {
 		bmCommand = new WriteBenchmarker(ui, caller, numFiles, numBlks, blkSizeKb, blockSequence);
+		bmCommand.registerObserver(new mockObserver());
 		bmCommand.run();
 		assertFalse(caller.getMarks().isEmpty());
 	}
@@ -66,7 +68,13 @@ public class BenchmarkerTest {
 	@Test
 	public void readBenchmark() {
 		bmCommand = new ReadBenchmarker(ui, caller, numFiles, numBlks, blkSizeKb, blockSequence);
+		bmCommand.registerObserver(new mockObserver());
 		bmCommand.run();
 		assertFalse(caller.getMarks().isEmpty());
+	}
+
+	@AfterEach
+	public void testObserver() {
+		assertTrue(mockObserver.wasNotified());
 	}
 }

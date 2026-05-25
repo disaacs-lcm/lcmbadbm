@@ -3,6 +3,9 @@ package edu.touro.mco152.bm;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.touro.mco152.bm.observer.*;
+import edu.touro.mco152.bm.persist.PersistObserver;
+import edu.touro.mco152.bm.ui.Gui;
 import edu.touro.mco152.bm.command.*;
 import static edu.touro.mco152.bm.App.*;
 
@@ -56,11 +59,17 @@ public class DiskBenchmarker {
             ui.resetTestData();
         }
 
+	RulesObserver rulesObserver = new RulesObserver();
+	rulesObserver.addRule(new SlackRule());
         /*
           The UI allows a Write, Read, or both types of BMs to be started. They are done serially.
          */
         if (App.writeTest) {
-            new WriteBenchmarker(ui, caller, App.numOfMarks, App.numOfBlocks, App.blockSizeKb, App.blockSequence).run();
+            BenchmarkCommand cmd = new WriteBenchmarker(ui, caller, App.numOfMarks, App.numOfBlocks, App.blockSizeKb, App.blockSequence);
+	    cmd.registerObserver(new PersistObserver());
+	    cmd.registerObserver(new Gui());
+	    cmd.registerObserver(rulesObserver);
+	    cmd.run();
         }
 
         /*
@@ -82,7 +91,11 @@ public class DiskBenchmarker {
 
         // Same as above, just for Read operations instead of Writes.
         if (App.readTest) {
-            new ReadBenchmarker(ui, caller, App.numOfMarks, App.numOfBlocks, App.blockSizeKb, App.blockSequence).run();
+            BenchmarkCommand cmd = new ReadBenchmarker(ui, caller, App.numOfMarks, App.numOfBlocks, App.blockSizeKb, App.blockSequence);
+	    cmd.registerObserver(new PersistObserver());
+	    cmd.registerObserver(new Gui());
+	    cmd.registerObserver(rulesObserver);
+	    cmd.run();
         }
         App.nextMarkNumber += App.numOfMarks;
         return true;
