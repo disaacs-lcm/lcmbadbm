@@ -4,8 +4,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -27,12 +25,6 @@ public class ReadBenchmarker extends AbstractBenchmarker implements BenchmarkCom
 		this.numOfBlocks = numOfBlocks;
 		this.blockSizeKb = blockSizeKb;
 		this.blockSequence = blockSequence;
-	}
-
-	private List<BenchmarkObserver> observers = new ArrayList<>();
-
-	public void registerObserver(BenchmarkObserver o) {
-		observers.add(o);
 	}
 
 	/**

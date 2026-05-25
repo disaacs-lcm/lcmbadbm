@@ -1,6 +1,8 @@
 package edu.touro.mco152.bm.command;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import edu.touro.mco152.bm.*;
 import edu.touro.mco152.bm.persist.DiskRun;
@@ -65,5 +67,11 @@ public abstract class AbstractBenchmarker {
 		run.setRunMin(mark.getCumMin());
 		run.setRunAvg(mark.getCumAvg());
 		run.setEndTime(new Date());
+	}
+
+	protected List<BenchmarkObserver> observers = new ArrayList<>();
+
+	public void registerObserver(BenchmarkObserver o) {
+		observers.add(o);
 	}
 }

@@ -4,6 +4,10 @@ import edu.touro.mco152.bm.Util;
 import edu.touro.mco152.bm.externalsys.SlackManager;
 import edu.touro.mco152.bm.persist.DiskRun;
 
+/**
+ * Sends a message on Slack if a read benchmark is 3% above average.
+ * To be called by {@link RulesObserver}
+ */
 public class SlackRule implements Rule {
 	private final SlackManager sm = new SlackManager("BadBM");
 

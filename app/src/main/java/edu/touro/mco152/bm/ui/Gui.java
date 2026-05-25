@@ -25,7 +25,7 @@ import java.text.NumberFormat;
  */
 public final class Gui implements BenchmarkObserver {
 
-    @Override
+    	@Override
 	public void update(DiskRun run) {
 		runPanel.addRun(run);
 		
